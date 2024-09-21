@@ -1,4 +1,4 @@
-package calc
+package main
 
 import (
 	"bufio"
@@ -39,13 +39,11 @@ func isValidNumber(num string) bool {
 }
 
 func infixToPostfix(expression string) ([]string, error) {
-	// if !isValidExpression(expression) {
-	// 	return nil, errors.New("Invalid expression1")
-	// }
 	var result []string
 	var stack []rune
 
 	var currentNum string
+	lastWasOperator := true // Указывает, был ли последний символ оператором или скобкой
 
 	for _, char := range expression {
 		if unicode.IsSpace(char) {
@@ -54,6 +52,7 @@ func infixToPostfix(expression string) ([]string, error) {
 
 		if unicode.IsDigit(char) || char == '.' {
 			currentNum += string(char) // Собираем число
+			lastWasOperator = false    // Последний символ - не оператор
 		} else {
 			if currentNum != "" {
 				if !isValidNumber(currentNum) {
@@ -64,14 +63,26 @@ func infixToPostfix(expression string) ([]string, error) {
 			}
 
 			switch char {
-			case '+', '-', '*', '/':
+			case '+', '-':
+				if lastWasOperator { // Обработка унарного оператора
+					result = append(result, "0") // Добавляем 0 перед унарным оператором
+				}
 				for len(stack) > 0 && precedence(stack[len(stack)-1]) >= precedence(char) {
 					result = append(result, string(stack[len(stack)-1]))
 					stack = stack[:len(stack)-1]
 				}
 				stack = append(stack, char)
+				lastWasOperator = true // Устанавливаем, что последний символ - оператор
+			case '*', '/':
+				for len(stack) > 0 && precedence(stack[len(stack)-1]) >= precedence(char) {
+					result = append(result, string(stack[len(stack)-1]))
+					stack = stack[:len(stack)-1]
+				}
+				stack = append(stack, char)
+				lastWasOperator = false // Устанавливаем, что последний символ - не оператор
 			case '(':
 				stack = append(stack, '(')
+				lastWasOperator = true // '(' может быть перед унарным оператором
 			case ')':
 				for len(stack) > 0 && stack[len(stack)-1] != '(' {
 					result = append(result, string(stack[len(stack)-1]))
@@ -81,6 +92,7 @@ func infixToPostfix(expression string) ([]string, error) {
 					return nil, errors.New("Mismatched parentheses")
 				}
 				stack = stack[:len(stack)-1] // убираем '(' (закрываем скобки)
+				lastWasOperator = false
 			default:
 				return nil, errors.New("Invalid character: " + string(char))
 			}
