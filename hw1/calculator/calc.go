@@ -25,13 +25,17 @@ func isValidNumber(num string) bool {
 	for index, char := range num {
 		switch char {
 		case '+', '-':
-			if index == 0 {
-				continue
+			if index != 0 {
+				return false
 			}
 		case '.':
 			dotCount++
 			if dotCount > 1 {
 				return false // Больше одной точки
+			}
+		default:
+			if !unicode.IsDigit(char) {
+				return false //Некорректный символ
 			}
 		}
 	}
