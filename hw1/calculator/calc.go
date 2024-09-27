@@ -23,19 +23,15 @@ func precedence(op rune) int {
 func isValidNumber(num string) bool {
 	dotCount := 0
 	for index, char := range num {
-		if !unicode.IsDigit(char) {
-			switch char {
-			case '+', '-':
-				if index == 0 {
-					continue
-				}
-			case '.':
-				dotCount++
-				if dotCount > 1 {
-					return false // больше одной точки
-				}
-			default:
-				return false // некорректный символ
+		switch char {
+		case '+', '-':
+			if index == 0 {
+				continue
+			}
+		case '.':
+			dotCount++
+			if dotCount > 1 {
+				return false // Больше одной точки
 			}
 		}
 	}
@@ -113,7 +109,7 @@ func infixToPostfix(expression string) ([]string, error) {
 				if len(stack) == 0 {
 					return nil, errors.New("Mismatched parentheses")
 				}
-				stack = stack[:len(stack)-1] // убираем '(' (закрываем скобки)
+				stack = stack[:len(stack)-1] // Убираем '(' (закрываем скобки)
 				lastWasOperator = false
 			default:
 				return nil, errors.New("Invalid character: " + string(char))
@@ -155,7 +151,7 @@ func calcExpr(expression string) (float64, error) {
 			}
 			secondNum := stack[len(stack)-1]
 			firstNum := stack[len(stack)-2]
-			stack = stack[:len(stack)-2] // Убираем последние два числа
+			stack = stack[:len(stack)-2]
 
 			var result float64
 			switch token {
