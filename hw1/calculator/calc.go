@@ -24,15 +24,17 @@ func isValidNumber(num string) bool {
 	dotCount := 0
 	for index, char := range num {
 		if !unicode.IsDigit(char) {
-			if (char == '-' || char == '+') && index == 0 {
-				continue
-			}
-			if char == '.' {
+			switch char {
+			case '+', '-':
+				if index == 0 {
+					continue
+				}
+			case '.':
 				dotCount++
 				if dotCount > 1 {
 					return false // больше одной точки
 				}
-			} else {
+			default:
 				return false // некорректный символ
 			}
 		}
