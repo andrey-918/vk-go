@@ -19,6 +19,10 @@ func printLine(output io.Writer, line string) {
 
 func processFile(input io.Reader, output io.Writer, countFlag, duplicatesFlag, uniqueFlag, ignoreCase bool, fieldCount, charCount int) {
 	scanner := bufio.NewScanner(input)
+	if (countFlag && duplicatesFlag) || (countFlag && uniqueFlag) || (duplicatesFlag && uniqueFlag) {
+		printLine(output, "Error: Options -c, -d, and -u are mutually exclusive.")
+		return
+	}
 
 	lastLine := ""
 	cur_in := 0
@@ -100,11 +104,6 @@ func main() {
 	charCount := flag.Int("s", 0, "ignore the first num_chars characters")
 
 	flag.Parse()
-
-	if (*countFlag && *duplicatesFlag) || (*countFlag && *uniqueFlag) || (*duplicatesFlag && *uniqueFlag) {
-		fmt.Println("Error: Options -c, -d, and -u are mutually exclusive.")
-		return
-	}
 
 	var output io.Writer
 
