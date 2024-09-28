@@ -55,8 +55,7 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 		*lastWasOperator = true
 		return nil
 	}
-
-	// Извлечение верхнего элемента из стека
+	
 	topValue, ok := operStack.Pop()
 	for ok {
 		// Проверка типа перед приведением
@@ -96,7 +95,6 @@ func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultS
 		topValue, ok = operStack.Pop()
 	}
 
-	// Добавляем текущий оператор в стек
 	operStack.Push(string(char))
 	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
