@@ -164,7 +164,7 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 	resultStack := stack.New()
 	operStack := stack.New()
 	if len(expression) == 0 {
-		return *resultStack, nil
+		return stack.Stack{}, nil
 	}
 
 	var currentNum string
@@ -183,7 +183,7 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 		} else {
 			if currentNum != "" {
 				if !isValidNumber(currentNum) {
-					return *resultStack, errors.New("Invalid number: " + currentNum)
+					return stack.Stack{}, errors.New("Invalid number: " + currentNum)
 				}
 				resultStack.Push(currentNum)
 				currentNum = ""
@@ -199,17 +199,17 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 			case ")":
 				err = handleCloseBracket(token, &lastWasOperator, resultStack, operStack)
 			default:
-				return *resultStack, errors.New("Invalid character: " + string(char))
+				return stack.Stack{}, errors.New("Invalid character: " + string(char))
 			}
 			if err != nil {
-				return *resultStack, err
+				return stack.Stack{}, err
 			}
 		}
 	}
 
 	if currentNum != "" {
 		if !isValidNumber(currentNum) {
-			return *resultStack, errors.New("Invalid number: " + currentNum)
+			return stack.Stack{}, errors.New("Invalid number: " + currentNum)
 		}
 		resultStack.Push(currentNum)
 	}
@@ -287,6 +287,11 @@ func CalcExpr(expression string) (float64, error) {
 	if !NumStack.IsEmpty() || !ok {
 		return 0, errors.New("Invalid expression")
 	}
-	roundTo := 10000
-	return math.Ceil(answer.(float64)*float64(roundTo)) / float64(roundTo), nil
+
+	const roundTo = 10000
+	ans, ok := answer.(float64)
+	if ok {
+		return math.Ceil(ans*float64(roundTo)) / float64(roundTo), nil
+	}
+	return 0, errors.New("Invalid expression")
 }
