@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Введите выражение.")
+		fmt.Println("Пожалуйста, введите выражение.")
 		return
 	}
 

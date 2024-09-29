@@ -1,18 +1,16 @@
 package utils
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"strings"
 )
 
-func ProcessFile(input io.Reader, output io.Writer, flags Flags) {
-	scanner := bufio.NewScanner(input)
+func ProcessFile(input []string, flags Flags) []string {
+	var output []string
 
 	if (flags.CountFlag && flags.DuplicatesFlag) || (flags.CountFlag && flags.UniqueFlag) || (flags.DuplicatesFlag && flags.UniqueFlag) {
-		PrintLine(output, "Error: Options -c, -d, and -u are mutually exclusive.")
-		return
+		output = append(output, "Error: Options -c, -d, and -u are mutually exclusive.")
+		return output
 	}
 
 	lastLine := ""
@@ -20,8 +18,7 @@ func ProcessFile(input io.Reader, output io.Writer, flags Flags) {
 	origLast := ""
 	origCur := ""
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range input {
 		origCur = line
 		if flags.IgnoreCase {
 			line = strings.ToLower(line)
@@ -44,17 +41,17 @@ func ProcessFile(input io.Reader, output io.Writer, flags Flags) {
 		}
 		if line != lastLine && curIn != 0 {
 			if flags.CountFlag {
-				PrintLine(output, fmt.Sprintf("%d %s", curIn, origLast))
+				output = append(output, fmt.Sprintf("%d %s", curIn, origLast))
 			} else if flags.DuplicatesFlag {
 				if curIn > 1 {
-					PrintLine(output, origLast)
+					output = append(output, origLast)
 				}
 			} else if flags.UniqueFlag {
 				if curIn == 1 {
-					PrintLine(output, origLast)
+					output = append(output, origLast)
 				}
 			} else {
-				PrintLine(output, origLast)
+				output = append(output, origLast)
 			}
 			curIn = 0
 			origLast = origCur
@@ -64,25 +61,21 @@ func ProcessFile(input io.Reader, output io.Writer, flags Flags) {
 		lastLine = line
 	}
 
-	if err := scanner.Err(); err != nil {
-		PrintLine(output, "Error reading input: "+err.Error())
-		return
-	}
-
 	if curIn > 0 { // Обработка последней строки
 		if flags.CountFlag {
-			PrintLine(output, fmt.Sprintf("%d %s", curIn, origLast))
+			output = append(output, fmt.Sprintf("%d %s", curIn, origLast))
 		} else if flags.DuplicatesFlag {
 			if curIn > 1 {
-				PrintLine(output, origLast)
+				output = append(output, origLast)
 			}
 		} else if flags.UniqueFlag {
 			if curIn == 1 {
-				PrintLine(output, origLast)
+				output = append(output, origLast)
 			}
 		} else {
-			PrintLine(output, origLast)
+			output = append(output, origLast)
 		}
 	}
 
+	return output
 }

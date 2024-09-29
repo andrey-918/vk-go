@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-
 	"github.com/stretchr/testify/require"
 	"testing"
 	"uniq/utils"
@@ -11,8 +9,8 @@ import (
 func TestProcessFile(t *testing.T) {
 	tests := []struct {
 		name           string
-		input          string
-		expected       string
+		input          []string
+		expected       []string
 		countFlag      bool
 		duplicatesFlag bool
 		uniqueFlag     bool
@@ -22,8 +20,8 @@ func TestProcessFile(t *testing.T) {
 	}{
 		{
 			name:           "Basic unique lines",
-			input:          "I love music.\nI love music.\nI love music.\n\nI love music of Kartik.\nI love music of Kartik.\nThanks.\nI love music of Kartik.\nI love music of Kartik.\n",
-			expected:       "I love music.\n\nI love music of Kartik.\nThanks.\nI love music of Kartik.\n",
+			input:          []string{"I love music.", "I love music.", "I love music.", "I love music of Kartik.", "I love music of Kartik.", "Thanks.", "I love music of Kartik.", "I love music of Kartik."},
+			expected:       []string{"I love music.", "I love music of Kartik.", "Thanks.", "I love music of Kartik."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -33,8 +31,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Count occurrences -c",
-			input:          "I love music.\nI love music.\nI love music.\n\nI love music of Kartik.\nI love music of Kartik.\nThanks.\nI love music of Kartik.\nI love music of Kartik.\n",
-			expected:       "3 I love music.\n1 \n2 I love music of Kartik.\n1 Thanks.\n2 I love music of Kartik.\n",
+			input:          []string{"I love music.", "I love music.", "I love music.", "", "I love music of Kartik.", "I love music of Kartik.", "Thanks.", "I love music of Kartik.", "I love music of Kartik."},
+			expected:       []string{"3 I love music.", "1 ", "2 I love music of Kartik.", "1 Thanks.", "2 I love music of Kartik."},
 			countFlag:      true,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -44,8 +42,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Only print duplicate lines -d",
-			input:          "I love music.\nI love music.\n\nI love music of Kartik.\nI love music of Kartik.\nThanks.\nI love music of Kartik.\n",
-			expected:       "I love music.\nI love music of Kartik.\n",
+			input:          []string{"I love music.", "I love music.", "", "I love music of Kartik.", "I love music of Kartik.", "Thanks.", "I love music of Kartik."},
+			expected:       []string{"I love music.", "I love music of Kartik."},
 			countFlag:      false,
 			duplicatesFlag: true,
 			uniqueFlag:     false,
@@ -55,8 +53,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Only print unique lines -u",
-			input:          "I love music.\nI love music.\n\nI love music of Kartik.\nThanks.\nI love music of Kartik.\n",
-			expected:       "\nI love music of Kartik.\nThanks.\nI love music of Kartik.\n",
+			input:          []string{"I love music.", "I love music.", "", "I love music of Kartik.", "Thanks.", "I love music of Kartik."},
+			expected:       []string{"", "I love music of Kartik.", "Thanks.", "I love music of Kartik."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     true,
@@ -66,8 +64,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "test with -f 1",
-			input:          "We love music.\nI love music.\nThey love music.\n\nI love music of Kartik.\nWe love music of Kartik.\nThanks.",
-			expected:       "We love music.\n\nI love music of Kartik.\nThanks.\n",
+			input:          []string{"We love music.", "I love music.", "They love music.", "", "I love music of Kartik.", "We love music of Kartik.", "Thanks."},
+			expected:       []string{"We love music.", "", "I love music of Kartik.", "Thanks."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -77,8 +75,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "test with -s 1",
-			input:          "I love music.\nA love music.\nC love music.\n\nI love music of Kartik.\nWe love music of Kartik.\nThanks.",
-			expected:       "I love music.\n\nI love music of Kartik.\nWe love music of Kartik.\nThanks.\n",
+			input:          []string{"I love music.", "A love music.", "C love music.", "", "I love music of Kartik.", "We love music of Kartik.", "Thanks."},
+			expected:       []string{"I love music.", "", "I love music of Kartik.", "We love music of Kartik.", "Thanks."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -88,8 +86,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "test with [-f 1 -s 1]",
-			input:          "I 1ove music.\nA 2ove music.\nC 3ove music.\n\nI 4ove music of Kartik.\nWe 5ove music of Kartik.\nThanks.",
-			expected:       "I 1ove music.\n\nI 4ove music of Kartik.\nThanks.\n",
+			input:          []string{"I 1ove music.", "A 2ove music.", "C 3ove music.", "", "I 4ove music of Kartik.", "We 5ove music of Kartik.", "Thanks."},
+			expected:       []string{"I 1ove music.", "", "I 4ove music of Kartik.", "Thanks."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -99,8 +97,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "test with [-f 1 -s 1 -c]",
-			input:          "I 1ove music.\nA 2ove music.\nC 3ove music.\n\nI 4ove music of Kartik.\nWe 5ove music of Kartik.\nThanks.",
-			expected:       "3 I 1ove music.\n1 \n2 I 4ove music of Kartik.\n1 Thanks.\n",
+			input:          []string{"I 1ove music.", "A 2ove music.", "C 3ove music.", "", "I 4ove music of Kartik.", "We 5ove music of Kartik.", "Thanks."},
+			expected:       []string{"3 I 1ove music.", "1 ", "2 I 4ove music of Kartik.", "1 Thanks."},
 			countFlag:      true,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -110,8 +108,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Ignore case -i",
-			input:          "I LOVE MUSIC.\nI love music.\nI LoVe MuSiC.\n\nI love MuSIC of Kartik.\nI love music of kartik.\nThanks.\nI love music of kartik.\nI love MuSIC of Kartik.",
-			expected:       "I LOVE MUSIC.\n\nI love MuSIC of Kartik.\nThanks.\nI love music of kartik.\n",
+			input:          []string{"I LOVE MUSIC.", "I love music.", "I LoVe MuSiC.", "", "I love MuSIC of Kartik.", "I love music of kartik.", "Thanks.", "I love music of kartik.", "I love MuSIC of Kartik."},
+			expected:       []string{"I LOVE MUSIC.", "", "I love MuSIC of Kartik.", "Thanks.", "I love music of kartik."},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -121,8 +119,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Options -c, -d, and -u are mutually exclusive.",
-			input:          "I LOVE MUSIC.\nI love music.\nI LoVe MuSiC.\n\nI love MuSIC of Kartik.\nI love music of kartik.\nThanks.\nI love music of kartik.\nI love MuSIC of Kartik.",
-			expected:       "Error: Options -c, -d, and -u are mutually exclusive.\n",
+			input:          []string{"I LOVE MUSIC.", "I love music.", "I LoVe MuSiC.", "", "I love MuSIC of Kartik.", "I love music of kartik.", "Thanks.", "I love music of kartik.", "I love MuSIC of Kartik."},
+			expected:       []string{"Error: Options -c, -d, and -u are mutually exclusive."},
 			countFlag:      true,
 			duplicatesFlag: true,
 			uniqueFlag:     true,
@@ -132,8 +130,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Options -c, -d, and -u are mutually exclusive.",
-			input:          "I LOVE MUSIC.\nI love music.\nI LoVe MuSiC.\n\nI love MuSIC of Kartik.\nI love music of kartik.\nThanks.\nI love music of kartik.\nI love MuSIC of Kartik.",
-			expected:       "Error: Options -c, -d, and -u are mutually exclusive.\n",
+			input:          []string{"I LOVE MUSIC.", "I love music.", "I LoVe MuSiC.", "", "I love MuSIC of Kartik.", "I love music of kartik.", "Thanks.", "I love music of kartik.", "I love MuSIC of Kartik."},
+			expected:       []string{"Error: Options -c, -d, and -u are mutually exclusive."},
 			countFlag:      true,
 			duplicatesFlag: false,
 			uniqueFlag:     true,
@@ -143,8 +141,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Options -c, -d, and -u are mutually exclusive.",
-			input:          "I LOVE MUSIC.\nI love music.\nI LoVe MuSiC.\n\nI love MuSIC of Kartik.\nI love music of kartik.\nThanks.\nI love music of kartik.\nI love MuSIC of Kartik.",
-			expected:       "Error: Options -c, -d, and -u are mutually exclusive.\n",
+			input:          []string{"I LOVE MUSIC.", "I love music.", "I LoVe MuSiC.", "", "I love MuSIC of Kartik.", "I love music of kartik.", "Thanks.", "I love music of kartik.", "I love MuSIC of Kartik."},
+			expected:       []string{"Error: Options -c, -d, and -u are mutually exclusive."},
 			countFlag:      true,
 			duplicatesFlag: true,
 			uniqueFlag:     false,
@@ -154,8 +152,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "Empty",
-			input:          "",
-			expected:       "",
+			input:          []string{""},
+			expected:       []string{""},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -163,10 +161,11 @@ func TestProcessFile(t *testing.T) {
 			fieldCount:     0,
 			charCount:      0,
 		},
+
 		{
 			name:           "1 word",
-			input:          "90",
-			expected:       "90\n",
+			input:          []string{"90"},
+			expected:       []string{"90"},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -176,8 +175,8 @@ func TestProcessFile(t *testing.T) {
 		},
 		{
 			name:           "1 word and f 10 s 10",
-			input:          "90",
-			expected:       "90\n",
+			input:          []string{"90"},
+			expected:       []string{"90"},
 			countFlag:      false,
 			duplicatesFlag: false,
 			uniqueFlag:     false,
@@ -189,8 +188,6 @@ func TestProcessFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			inputReader := bytes.NewReader([]byte(tt.input))
-			var outputBuffer bytes.Buffer
 			flags := utils.Flags{
 				CountFlag:      tt.countFlag,
 				DuplicatesFlag: tt.duplicatesFlag,
@@ -200,9 +197,9 @@ func TestProcessFile(t *testing.T) {
 				CharCount:      tt.charCount,
 			}
 
-			utils.ProcessFile(inputReader, &outputBuffer, flags)
+			output := utils.ProcessFile(tt.input, flags)
 
-			require.Equal(t, tt.expected, outputBuffer.String())
+			require.Equal(t, tt.expected, output)
 		})
 	}
 }

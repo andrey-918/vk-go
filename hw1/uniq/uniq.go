@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"uniq/utils"
 )
@@ -11,7 +11,7 @@ import (
 func main() {
 	flags := utils.ParseFlags()
 
-	var output io.Writer
+	var output func([]string) error
 	if len(flag.Args()) > 1 {
 		var err error
 		output, err = utils.CreateOutputFile(flag.Args()[1])
@@ -19,12 +19,14 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		defer output.(io.Closer).Close()
-	} else {
-		output = os.Stdout
+		defer func() {
+			if err := output(nil); err != nil {
+				fmt.Println(err)
+			}
+		}()
 	}
 
-	var input io.Reader
+	var input []string
 	if len(flag.Args()) > 0 {
 		var err error
 		input, err = utils.OpenInputFile(flag.Args()[0])
@@ -32,10 +34,26 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		defer input.(io.Closer).Close()
 	} else {
-		input = os.Stdin
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			input = append(input, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error reading from stdin:", err)
+			return
+		}
 	}
 
-	utils.ProcessFile(input, output, flags)
+	outputLines := utils.ProcessFile(input, flags)
+
+	if output != nil {
+		if err := output(outputLines); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		for _, line := range outputLines {
+			fmt.Println(line)
+		}
+	}
 }
