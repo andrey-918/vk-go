@@ -3,7 +3,6 @@ package calc
 import (
 	"calculator/stack"
 	"errors"
-
 	"math"
 	"strconv"
 	"unicode"
@@ -58,9 +57,7 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 		return nil
 	}
 
-	topValue, ok := operStack.Pop()
-	for ok {
-		// Проверка типа перед приведением
+	for topValue, ok := operStack.Pop(); ok; {
 		if strValue, ok := topValue.(string); ok {
 			if precedence(strValue) >= precedence(char) {
 				resultStack.Push(strValue)
@@ -81,8 +78,8 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 }
 
 func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
-	topValue, ok := operStack.Pop()
-	for ok {
+
+	for topValue, ok := operStack.Pop(); ok; {
 		if strValue, ok := topValue.(string); ok {
 			if precedence(strValue) >= precedence(char) {
 				resultStack.Push(strValue)
@@ -107,8 +104,7 @@ func handleOpenBracket(char string, lastWasOperator *bool, resultStack *stack.St
 		return errors.New("Invalid character: expected '('")
 	}
 	if !*lastWasOperator { // Если перед скобкой нет оператора, добавляем '*'
-		topValue, ok := operStack.Pop()
-		for ok {
+		for topValue, ok := operStack.Pop(); ok; {
 			if strValue, ok := topValue.(string); ok {
 				if precedence(strValue) >= precedence("*") {
 					resultStack.Push(strValue)
