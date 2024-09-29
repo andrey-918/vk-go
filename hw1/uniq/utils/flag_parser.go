@@ -4,7 +4,16 @@ import (
 	"flag"
 )
 
-func ParseFlags() (bool, bool, bool, bool, int, int) {
+type Flags struct {
+	CountFlag      bool
+	DuplicatesFlag bool
+	UniqueFlag     bool
+	IgnoreCase     bool
+	FieldCount     int
+	CharCount      int
+}
+
+func ParseFlags() Flags {
 	countFlag := flag.Bool("c", false, "count consecutive occurrences of each line")
 	duplicatesFlag := flag.Bool("d", false, "only print duplicate lines")
 	uniqueFlag := flag.Bool("u", false, "only print unique lines")
@@ -14,5 +23,12 @@ func ParseFlags() (bool, bool, bool, bool, int, int) {
 
 	flag.Parse()
 
-	return *countFlag, *duplicatesFlag, *uniqueFlag, *ignoreCase, *fieldCount, *charCount
+	return Flags{
+		CountFlag:      *countFlag,
+		DuplicatesFlag: *duplicatesFlag,
+		UniqueFlag:     *uniqueFlag,
+		IgnoreCase:     *ignoreCase,
+		FieldCount:     *fieldCount,
+		CharCount:      *charCount,
+	}
 }

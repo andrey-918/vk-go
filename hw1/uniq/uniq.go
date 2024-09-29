@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	countFlag, duplicatesFlag, uniqueFlag, ignoreCase, fieldCount, charCount := utils.ParseFlags()
+	flags := utils.ParseFlags()
 
 	var output io.Writer
 	if len(flag.Args()) > 1 {
@@ -21,7 +21,7 @@ func main() {
 		}
 		defer output.(io.Closer).Close()
 	} else {
-		output = os.Stdout // Вывод в консоль
+		output = os.Stdout
 	}
 
 	var input io.Reader
@@ -37,5 +37,5 @@ func main() {
 		input = os.Stdin
 	}
 
-	utils.ProcessFile(input, output, countFlag, duplicatesFlag, uniqueFlag, ignoreCase, fieldCount, charCount)
+	utils.ProcessFile(input, output, flags)
 }

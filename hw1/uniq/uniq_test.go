@@ -191,8 +191,16 @@ func TestProcessFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			inputReader := bytes.NewReader([]byte(tt.input))
 			var outputBuffer bytes.Buffer
+			flags := utils.Flags{
+				CountFlag:      tt.countFlag,
+				DuplicatesFlag: tt.duplicatesFlag,
+				UniqueFlag:     tt.uniqueFlag,
+				IgnoreCase:     tt.ignoreCase,
+				FieldCount:     tt.fieldCount,
+				CharCount:      tt.charCount,
+			}
 
-			utils.ProcessFile(inputReader, &outputBuffer, tt.countFlag, tt.duplicatesFlag, tt.uniqueFlag, tt.ignoreCase, tt.fieldCount, tt.charCount)
+			utils.ProcessFile(inputReader, &outputBuffer, flags)
 
 			require.Equal(t, tt.expected, outputBuffer.String())
 		})

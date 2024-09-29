@@ -7,9 +7,10 @@ import (
 	"strings"
 )
 
-func ProcessFile(input io.Reader, output io.Writer, countFlag, duplicatesFlag, uniqueFlag, ignoreCase bool, fieldCount, charCount int) {
+func ProcessFile(input io.Reader, output io.Writer, flags Flags) {
 	scanner := bufio.NewScanner(input)
-	if (countFlag && duplicatesFlag) || (countFlag && uniqueFlag) || (duplicatesFlag && uniqueFlag) {
+
+	if (flags.CountFlag && flags.DuplicatesFlag) || (flags.CountFlag && flags.UniqueFlag) || (flags.DuplicatesFlag && flags.UniqueFlag) {
 		PrintLine(output, "Error: Options -c, -d, and -u are mutually exclusive.")
 		return
 	}
@@ -22,33 +23,33 @@ func ProcessFile(input io.Reader, output io.Writer, countFlag, duplicatesFlag, u
 	for scanner.Scan() {
 		line := scanner.Text()
 		origCur = line
-		if ignoreCase {
+		if flags.IgnoreCase {
 			line = strings.ToLower(line)
 		}
 
 		fields := strings.Fields(line)
 
-		if fieldCount > 0 && len(fields) > fieldCount {
-			line = strings.Join(fields[fieldCount:], " ")
-		} else if fieldCount > 0 {
+		if flags.FieldCount > 0 && len(fields) > flags.FieldCount {
+			line = strings.Join(fields[flags.FieldCount:], " ")
+		} else if flags.FieldCount > 0 {
 			line = ""
 		}
 
-		if charCount > 0 && len(line) > charCount {
-			line = line[charCount:]
+		if flags.CharCount > 0 && len(line) > flags.CharCount {
+			line = line[flags.CharCount:]
 		}
 
 		if curIn == 0 {
 			origLast = origCur
 		}
 		if line != lastLine && curIn != 0 {
-			if countFlag {
+			if flags.CountFlag {
 				PrintLine(output, fmt.Sprintf("%d %s", curIn, origLast))
-			} else if duplicatesFlag {
+			} else if flags.DuplicatesFlag {
 				if curIn > 1 {
 					PrintLine(output, origLast)
 				}
-			} else if uniqueFlag {
+			} else if flags.UniqueFlag {
 				if curIn == 1 {
 					PrintLine(output, origLast)
 				}
@@ -63,14 +64,19 @@ func ProcessFile(input io.Reader, output io.Writer, countFlag, duplicatesFlag, u
 		lastLine = line
 	}
 
+	if err := scanner.Err(); err != nil {
+		PrintLine(output, "Error reading input: "+err.Error())
+		return
+	}
+
 	if curIn > 0 { // Обработка последней строки
-		if countFlag {
+		if flags.CountFlag {
 			PrintLine(output, fmt.Sprintf("%d %s", curIn, origLast))
-		} else if duplicatesFlag {
+		} else if flags.DuplicatesFlag {
 			if curIn > 1 {
 				PrintLine(output, origLast)
 			}
-		} else if uniqueFlag {
+		} else if flags.UniqueFlag {
 			if curIn == 1 {
 				PrintLine(output, origLast)
 			}
@@ -79,8 +85,4 @@ func ProcessFile(input io.Reader, output io.Writer, countFlag, duplicatesFlag, u
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		PrintLine(output, "Error reading input: "+err.Error())
-		return
-	}
 }

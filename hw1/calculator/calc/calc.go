@@ -74,7 +74,7 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 	}
 
 	operStack.Push(string(char))
-	*lastWasOperator = true 
+	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
 }
 
@@ -96,7 +96,7 @@ func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultS
 	}
 
 	operStack.Push(string(char))
-	*lastWasOperator = true 
+	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
 }
 
@@ -156,7 +156,7 @@ func handleCloseBracket(char string, lastWasOperator *bool, resultStack *stack.S
 		return errors.New("Mismatched parentheses")
 	}
 
-	*lastWasOperator = false 
+	*lastWasOperator = false // Устанавливаем, что последний символ не оператор
 	return nil
 }
 
@@ -179,7 +179,7 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 		token := string(char)
 		if unicode.IsDigit(char) || char == '.' {
 			currentNum += token     // Собираем число
-			lastWasOperator = false 
+			lastWasOperator = false // Последний символ - не оператор
 		} else {
 			if currentNum != "" {
 				if !isValidNumber(currentNum) {
