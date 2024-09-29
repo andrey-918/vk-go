@@ -9,6 +9,8 @@ import (
 	"unicode"
 )
 
+const decimalPlaces = 10000 //Округление числа до 1/decimalPlaces после запятой
+
 func precedence(op string) int {
 	switch op {
 	case "+", "-":
@@ -288,10 +290,9 @@ func CalcExpr(expression string) (float64, error) {
 		return 0, errors.New("Invalid expression")
 	}
 
-	const roundTo = 10000
 	ans, ok := answer.(float64)
 	if ok {
-		return math.Ceil(ans*float64(roundTo)) / float64(roundTo), nil
+		return math.Ceil(ans*float64(decimalPlaces)) / float64(decimalPlaces), nil
 	}
 	return 0, errors.New("Invalid expression")
 }
