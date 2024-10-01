@@ -46,10 +46,34 @@ func isOperator(char rune) bool {
 	return char == '+' || char == '-' || char == '*' || char == '/'
 }
 
+func findPlaceForToken(char string, resultStack, operStack *stack.Stack) error {
+	if resultStack == nil || operStack == nil {
+		return nil
+	}
+	for topValue, ok := operStack.Pop(); ok; {
+		if strValue, ok := topValue.(string); ok {
+			if precedence(strValue) >= precedence(char) {
+				resultStack.Push(strValue)
+			} else {
+				// Если приоритет не подходит, возвращаем элемент обратно в стек
+				operStack.Push(topValue)
+				break
+			}
+		} else {
+			return errors.New("Invalid type in stack: expected string")
+		}
+		topValue, ok = operStack.Pop()
+	}
+	return nil
+}
+
 func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, resultStack *stack.Stack, operStack *stack.Stack) error {
+	if resultStack == nil || operStack == nil {
+		return nil
+	}
 	if *lastWasOperator { // Обработка унарного оператора
 		if *currentNum == "" {
-			*currentNum = string(char)
+			*currentNum = char
 		} else {
 			return errors.New("Invalid input")
 		}
@@ -57,66 +81,41 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 		return nil
 	}
 
-	for topValue, ok := operStack.Pop(); ok; {
-		if strValue, ok := topValue.(string); ok {
-			if precedence(strValue) >= precedence(char) {
-				resultStack.Push(strValue)
-			} else {
-				// Если приоритет не подходит, возвращаем элемент обратно в стек
-				operStack.Push(topValue)
-				break
-			}
-		} else {
-			return errors.New("Invalid type in stack: expected string")
-		}
-		topValue, ok = operStack.Pop()
+	err := findPlaceForToken(char, resultStack, operStack)
+	if err != nil {
+		return err
 	}
 
-	operStack.Push(string(char))
+	operStack.Push(char)
 	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
 }
 
 func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
-
-	for topValue, ok := operStack.Pop(); ok; {
-		if strValue, ok := topValue.(string); ok {
-			if precedence(strValue) >= precedence(char) {
-				resultStack.Push(strValue)
-			} else {
-				// Если приоритет не подходит, возвращаем элемент обратно в стек
-				operStack.Push(topValue)
-				break
-			}
-		} else {
-			return errors.New("Invalid type in stack: expected string")
-		}
-		topValue, ok = operStack.Pop()
+	if resultStack == nil || operStack == nil {
+		return nil
+	}
+	err := findPlaceForToken(char, resultStack, operStack)
+	if err != nil {
+		return err
 	}
 
-	operStack.Push(string(char))
+	operStack.Push(char)
 	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
 }
 
 func handleOpenBracket(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
+	if resultStack == nil || operStack == nil {
+		return nil
+	}
 	if char != "(" {
 		return errors.New("Invalid character: expected '('")
 	}
 	if !*lastWasOperator { // Если перед скобкой нет оператора, добавляем '*'
-		for topValue, ok := operStack.Pop(); ok; {
-			if strValue, ok := topValue.(string); ok {
-				if precedence(strValue) >= precedence("*") {
-					resultStack.Push(strValue)
-				} else {
-					// Если приоритет не подходит, возвращаем элемент обратно в стек
-					operStack.Push(topValue)
-					break
-				}
-			} else {
-				return errors.New("Invalid type in stack: expected string")
-			}
-			topValue, ok = operStack.Pop()
+		err := findPlaceForToken("*", resultStack, operStack)
+		if err != nil {
+			return err
 		}
 		operStack.Push("*")
 	}
@@ -127,6 +126,9 @@ func handleOpenBracket(char string, lastWasOperator *bool, resultStack *stack.St
 }
 
 func handleCloseBracket(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
+	if resultStack == nil || operStack == nil {
+		return nil
+	}
 	if char != ")" {
 		return errors.New("Invalid character: expected ')'")
 	}
@@ -197,7 +199,7 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 			case ")":
 				err = handleCloseBracket(token, &lastWasOperator, resultStack, operStack)
 			default:
-				return stack.Stack{}, errors.New("Invalid character: " + string(char))
+				return stack.Stack{}, errors.New("Invalid character: " + token)
 			}
 			if err != nil {
 				return stack.Stack{}, err
