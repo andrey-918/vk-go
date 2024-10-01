@@ -67,17 +67,17 @@ func findPlaceForToken(char string, resultStack, operStack *stack.Stack) error {
 	return nil
 }
 
-func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, resultStack *stack.Stack, operStack *stack.Stack) error {
+func handlePlusAndMinus(char string, lastWasOperator bool, currentNum *string, resultStack *stack.Stack, operStack *stack.Stack) error {
 	if resultStack == nil || operStack == nil {
 		return nil
 	}
-	if *lastWasOperator { // Обработка унарного оператора
+	if lastWasOperator { // Обработка унарного оператора
 		if *currentNum == "" {
 			*currentNum = char
 		} else {
 			return errors.New("Invalid input")
 		}
-		*lastWasOperator = true
+
 		return nil
 	}
 
@@ -87,11 +87,10 @@ func handlePlusAndMinus(char string, lastWasOperator *bool, currentNum *string, 
 	}
 
 	operStack.Push(char)
-	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
 	return nil
 }
 
-func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
+func handleMultiplicationAndDivision(char string, resultStack *stack.Stack, operStack *stack.Stack) error {
 	if resultStack == nil || operStack == nil {
 		return nil
 	}
@@ -101,18 +100,18 @@ func handleMultiplicationAndDivision(char string, lastWasOperator *bool, resultS
 	}
 
 	operStack.Push(char)
-	*lastWasOperator = true // Устанавливаем, что последний символ - оператор
+
 	return nil
 }
 
-func handleOpenBracket(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
+func handleOpenBracket(char string, lastWasOperator bool, resultStack *stack.Stack, operStack *stack.Stack) error {
 	if resultStack == nil || operStack == nil {
 		return nil
 	}
 	if char != "(" {
 		return errors.New("Invalid character: expected '('")
 	}
-	if !*lastWasOperator { // Если перед скобкой нет оператора, добавляем '*'
+	if !lastWasOperator { // Если перед скобкой нет оператора, добавляем '*'
 		err := findPlaceForToken("*", resultStack, operStack)
 		if err != nil {
 			return err
@@ -120,12 +119,11 @@ func handleOpenBracket(char string, lastWasOperator *bool, resultStack *stack.St
 		operStack.Push("*")
 	}
 	operStack.Push("(")
-	*lastWasOperator = true // '(' может быть перед унарным оператором
 
 	return nil
 }
 
-func handleCloseBracket(char string, lastWasOperator *bool, resultStack *stack.Stack, operStack *stack.Stack) error {
+func handleCloseBracket(char string, resultStack *stack.Stack, operStack *stack.Stack) error {
 	if resultStack == nil || operStack == nil {
 		return nil
 	}
@@ -156,7 +154,6 @@ func handleCloseBracket(char string, lastWasOperator *bool, resultStack *stack.S
 		return errors.New("Mismatched parentheses")
 	}
 
-	*lastWasOperator = false // Устанавливаем, что последний символ не оператор
 	return nil
 }
 
@@ -191,13 +188,17 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 			var err error
 			switch token {
 			case "+", "-":
-				err = handlePlusAndMinus(token, &lastWasOperator, &currentNum, resultStack, operStack)
+				err = handlePlusAndMinus(token, lastWasOperator, &currentNum, resultStack, operStack)
+				lastWasOperator = true
 			case "*", "/":
-				err = handleMultiplicationAndDivision(token, &lastWasOperator, resultStack, operStack)
+				err = handleMultiplicationAndDivision(token, resultStack, operStack)
+				lastWasOperator = true
 			case "(":
-				err = handleOpenBracket(token, &lastWasOperator, resultStack, operStack)
+				err = handleOpenBracket(token, lastWasOperator, resultStack, operStack)
+				lastWasOperator = true
 			case ")":
-				err = handleCloseBracket(token, &lastWasOperator, resultStack, operStack)
+				err = handleCloseBracket(token, resultStack, operStack)
+				lastWasOperator = false
 			default:
 				return stack.Stack{}, errors.New("Invalid character: " + token)
 			}
