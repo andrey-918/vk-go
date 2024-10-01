@@ -11,19 +11,15 @@ import (
 func main() {
 	flags := utils.ParseFlags()
 
-	var output func([]string) error
+	var outputFile *os.File
 	if len(flag.Args()) > 1 {
 		var err error
-		output, err = utils.CreateOutputFile(flag.Args()[1])
+		outputFile, err = os.Create(flag.Args()[1])
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		defer func() {
-			if err := output(nil); err != nil {
-				fmt.Println(err)
-			}
-		}()
+		defer outputFile.Close()
 	}
 
 	var input []string
@@ -47,9 +43,11 @@ func main() {
 
 	outputLines := utils.ProcessFile(input, flags)
 
-	if output != nil {
-		if err := output(outputLines); err != nil {
-			fmt.Println(err)
+	if outputFile != nil {
+		for _, line := range outputLines {
+			if _, err := fmt.Fprintln(outputFile, line); err != nil {
+				fmt.Println(err)
+			}
 		}
 	} else {
 		for _, line := range outputLines {
