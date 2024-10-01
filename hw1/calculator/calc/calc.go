@@ -149,7 +149,7 @@ func handleCloseBracket(char string, lastWasOperator *bool, resultStack *stack.S
 		}
 
 		resultStack.Push(strValue)
-		topValue, ok = operStack.Pop()
+		topValue, _ = operStack.Pop()
 	}
 
 	if topValue == nil && !ok { // Если стек пуст и не было найдено открывающей скобки
@@ -214,8 +214,7 @@ func infixToPostfix(expression string) (stack.Stack, error) {
 		resultStack.Push(currentNum)
 	}
 
-	topValue, ok := operStack.Pop()
-	for ok {
+	for topValue, ok := operStack.Pop(); ok; {
 		resultStack.Push(topValue.(string))
 		topValue, ok = operStack.Pop()
 	}
