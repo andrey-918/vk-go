@@ -68,7 +68,7 @@ func findPlaceForToken(char string, resultStack, operStack *stack.Stack) error {
 }
 
 func handlePlusAndMinus(char string, lastWasOperator bool, currentNum *string, resultStack *stack.Stack, operStack *stack.Stack) error {
-	if resultStack == nil || operStack == nil {
+	if resultStack == nil || operStack == nil || currentNum == nil {
 		return nil
 	}
 	if lastWasOperator { // Обработка унарного оператора
